@@ -34,6 +34,7 @@ try:
     click=pg.mixer.Sound('click.ogg')
     switch=pg.mixer.Sound('change.mp3')
     empty=pg.mixer.Sound('bubbles.mp3')
+    white=pg.mixer.Sound('timer.mp3')
     f = pg.display.set_mode((0,0))
     pg.display.set_caption("crédit @ryanair aka soldat µ")
     pg.display.init()
@@ -75,6 +76,7 @@ try:
                     for i in range(nbsx):
                         for j in range(nbsy):
                             lieux[(int(-depx/SIZE)+i+0.5,int(-depy/SIZE)+j+0.5)]=0xffffff
+                    white.play()
                 elif touche == pg.K_e:
                     lieux={}
                     empty.play()
