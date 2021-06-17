@@ -1,7 +1,4 @@
 import pygame as pg
-import time
-import random
-import math
 from colorsys import hsv_to_rgb
 from tkinter.filedialog import asksaveasfile
 """à alléger et clarifier"""
@@ -23,7 +20,9 @@ class dep:
         return str((self.x,self.y))
 
 def find(x,y):return bool(lieux.get((x,y),0))
-
+def coul(sel):
+    if sel==1: return 0xffffff
+    else: return hsv_to_rgb(sel,1,255)
 lieux={}
 b = True
 mode=''
@@ -33,7 +32,7 @@ depx,depy=0,0
 try:
     pg.init()
     click=pg.mixer.Sound('click.ogg')
-    switch=pg.mixer.Sound('timer.mp3')
+    switch=pg.mixer.Sound('change.mp3')
     empty=pg.mixer.Sound('bubbles.mp3')
     f = pg.display.set_mode((0,0))
     pg.display.set_caption("crédit @ryanair aka soldat µ")
@@ -60,6 +59,14 @@ try:
             if event.type == pg.QUIT:
                 b = False
                 print(" Il y avait {0} cellules".format(len(lieux)))
+            elif event.type== pg.KEYUP:
+                if event.key==pg.K_w:
+                    sel-=0.1
+                    switch.play()
+                elif event.key==pg.K_x:
+                    sel+=0.1
+                    switch.play()
+                sel=round(sel,1)%1.2
             if event.type == pg.KEYDOWN:
                 touche=event.key
                 nbsx=int(WINDX/SIZE)
@@ -101,13 +108,7 @@ try:
                     else:
                         depx+=x*5
                         depy+=y*5
-                elif event.button==6:
-                    sel-=0.1
-                    switch.play()
-                elif event.button==7:
-                    sel+=0.1
-                    switch.play()
-                sel=sel%1
+               
                 nbsx=int(WINDX/SIZE)
                 nbsy=int(WINDY/SIZE)
         SIZE+=(fakeSIZE-SIZE)/7
@@ -116,10 +117,10 @@ try:
         y=round((y-depy)/SIZE)-0.5
         
         if mode=='c':
-            if lieux.get((x,y),0)!=hsv_to_rgb(sel,1,255):
+            if lieux.get((x,y),0)!=coul(sel):
                 click.set_volume(0.5)
                 click.play()
-            lieux[(x,y)]=hsv_to_rgb(sel,1,255)
+            lieux[(x,y)]=coul(sel)
             
         elif mode=='e':
             if lieux.get((x,y),False):
@@ -129,9 +130,9 @@ try:
         
         f.fill(0)
         for i,j in lieux:
-            if i>-depx/SIZE-1 and j>-depy/SIZE-1 and i<-depx/SIZE+nbsx and j<-depy/SIZE+nbsy: # si on a besoin de le dessiner
+            if i>-depx/SIZE-2 and j>-depy/SIZE-2 and i<-depx/SIZE+nbsx+1 and j<-depy/SIZE+nbsy+1: # si on a besoin de le dessiner
                 pg.draw.rect(f,lieux[(i,j)],((dep.x+i*SIZE,dep.y+j*SIZE),(SIZE,SIZE)))
-        pg.draw.rect(f,hsv_to_rgb(sel,1,255),((x*SIZE+dep.x,y*SIZE+dep.y),(SIZE,SIZE)))
+        pg.draw.rect(f,coul(sel),((x*SIZE+dep.x,y*SIZE+dep.y),(SIZE,SIZE)))
         pg.draw.rect(f,0,((x*SIZE+dep.x,y*SIZE+dep.y),(SIZE,SIZE)),width=3)
 
         fps.tick(FPS)
