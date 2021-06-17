@@ -31,10 +31,11 @@ sel=0
 depx,depy=0,0
 try:
     pg.init()
-    click=pg.mixer.Sound('click.ogg')
-    switch=pg.mixer.Sound('change.mp3')
-    empty=pg.mixer.Sound('bubbles.mp3')
-    white=pg.mixer.Sound('timer.mp3')
+    click=pg.mixer.Sound('sonds//click.ogg')
+    switch=pg.mixer.Sound('sonds//change.mp3')
+    empty=pg.mixer.Sound('sonds//bubbles.mp3')
+    white=pg.mixer.Sound('sonds//timer.mp3')
+    erase=pg.mixer.Sound('sonds//erase.mp3')
     f = pg.display.set_mode((0,0))
     pg.display.set_caption("crédit @ryanair aka soldat µ")
     pg.display.init()
@@ -120,15 +121,13 @@ try:
         
         if mode=='c':
             if lieux.get((x,y),0)!=coul(sel):
-                click.set_volume(0.5)
                 click.play()
             lieux[(x,y)]=coul(sel)
             
         elif mode=='e':
             if lieux.get((x,y),False):
                 lieux.pop((x,y))
-                click.set_volume(1)
-                click.play()
+                erase.play()
         
         f.fill(0)
         for i,j in lieux:
