@@ -1,103 +1,121 @@
 let canvas = document.getElementById("fen");
-let context = canvas.getContext("2d"),
-			W = window.innerWidth,
-			H = window.innerHeight,
-			ratio = window.devicePixelRatio;
-let hmemel=document.getElementById("html");
+let context = canvas.getContext("2d")
+let W = window.innerWidth
+let H = window.innerHeight
+let ratio = window.devicePixelRatio;
 canvas.width = W*ratio;
 canvas.height = H*ratio;
 canvas.style.width = W  + "px";
 canvas.style.height = H  + "px";
 context.scale(ratio,ratio);
+context.lineWidth=5
+context.shadowBlur=0
 document.addEventListener("wheel",scroll,false);
-document.addEventListener("mousemove", bouge, false);
-document.onmousedown = click;
-document.onmouseup= function up(e) {
-	mode=''
-}
+canvas.addEventListener("mousemove", bouge, false);
 document.addEventListener("keydown", keydown, false);
-function bouge(p){
-	x = p.pageX;
-	y = p.pageY;
-	x=Math.round(x/SIZE)-1-depx/SIZE
-    y=Math.round(y/SIZE)-1-depy/SIZE
-}
-function scroll(cb){
-	if(cb.deltaY<0){
-		SIZE+=5;
-		depx-=x*5
-		depy-=y*5
-	}else if(cb.deltaY>0){
-		SIZE-=5
-		if(SIZE<0){
-			size=1
-		}else{
-			depx+=x*5
-			depy+=y*5
-		}
-	}
-	nbsx=parseInt(W/SIZE)
-	nbsy=parseInt(H/SIZE)
-}
-function click(e) {
+document.addEventListener("keyup", keyup, false);
+document.onmouseup= function up(e) {mode=''}
+document.onmousedown= function click(e) {
 	switch(e.buttons){
 		case 1:
 			mode='c'
 			break;
-		case 2:
-			mode='take'
-			sel=lieux[[x,y]]
-			break;
 		case 4:
+			mode='take'
+			coulSel=lieux[[mousex,mousey]]
+			break;
+		case 2:
 			mode='e'
 			break;
 	}
 }
-function keydown(e){
+
+function bouge(p){
+	mouseRlx=p.offsetX
+	mouseRly=p.offsetY
+	actu_mousepos()
+}
+
+function actu_mousepos() {
+	mousex=parseInt((mouseRlx-dep.fkx)/size.fk)
+    mousey=parseInt((mouseRly-dep.fky)/size.fk)
+}
+
+function scroll(cb){
+	if(cb.deltaY<0){
+		size.rl+=5;
+		dep.rlx-=mousex*5
+		dep.rly-=mousey*5
+	}else if(cb.deltaY>0){
+		size.rl-=5
+		if(size.rl<0){
+			size.rl=1
+		}else{
+			dep.rlx+=mousex*5
+			dep.rly+=mousey*5
+		}
+	}
+}
+
+function keydown(e) {
 	v=e.keyCode
-	console.log(v)
 	switch(v){
-		case 81:
-			depx+=10
-			break;
-		case 83:
-			depy-=10
-			break;
-		case 68:
-			depx-=10
-			break;
-		case 90:
-			depy+=10
-			break;
 		case 87:
-			sel+=0.1
+			coulSel+=0.1
+			if(coulSel>1){coulSel=0}
 			break;
 		case 88:
-			sel-=0.1
+			coulSel-=0.1
+			if(coulSel<0){coulSel=1}
 			break;
 		case 27:
-			depx=0
-			depy=0
+			dep.rlx=0
+			dep.rly=0
+			actu_mousepos()
 			break;
 		case 67:
-			sel=lieux[[x,y]]
-			break;
-		case 16:
-			devmode= !devmode
+			coulSel=lieux[[mousex,mousey]]
 			break;
 		case 32:
 			helpmode= !helpmode
+			break;
+		case 17:
+			if (context.shadowBlur==15){
+				context.shadowBlur=0
+			}else{
+				context.shadowBlur=15
+			}
+		default:
+			key_dict[v]=true
 	}
-	sel=sel%1.2
-	document.body.style.backgroundColor = coul(sel)
-	//shell.textContent+=v+"\n";
-	//context.fillStyle = "blue";
-	//context.fillText(v,v*10,v*10);
+	coulSel=Math.round(coulSel*10)/10
+	document.body.style.backgroundColor = coul(coulSel)
 }
-let dep={'x':0,'y':0}
-function find(xer,yer){
-	return lieux[[xer,yer]]!=undefined
+
+function keyup(e) {key_dict[e.keyCode]=false}
+
+function move_by_key(e){
+	v=parseInt(e)
+	switch(v){
+		case 81:
+			dep.rlx+=10
+			break;
+		case 83:
+			dep.rly-=10
+			break;
+		case 68:
+			dep.rlx-=10
+			break;
+		case 90:
+			dep.rly+=10
+			break;
+		
+	}
+	actu_mousepos()	
 }
+
+function find(xer,yer){return lieux[[xer,yer]]!=undefined}
+
 function coul(sel) {
 	if(sel==1){
 		return "white"
@@ -105,76 +123,88 @@ function coul(sel) {
 		return "hsl("+sel*360+",100%,50%)";
 	}
 }
-let lieux={}
+
+let dep={'rlx':0,'rly':0,'fkx':0,'fky':0}
+let size={'fk':50,'rl':50}
+let lieux={},key_dict={};
 let mode=''
-let sel=1
-let depx=0,depy=0;
-let devmode=true;
+let coulSel=Math.round(Math.random()*10)/10
+
 let helpmode=true;
-let x=10
-let y=10
-let i,j;
-let SIZE =75
-let fakeSIZE=75
-let nbsx=W/SIZE
-let nbsy=H/SIZE
-context.font = "25px consolas";
-context.textBaseline = "middle"
+
+let mousex=10
+let mousey=10
+context.strokeStyle = coul(coulSel);
+const helper=document.getElementById("help")
 
 function bLoop() {
-	if(devmode){
-		context.beginPath()
-		context.fillStyle=coul(sel)
-		context.fillRect(0,0,W,H)
-		context.fill()
-		context.closePath()
-		context.beginPath()
-		context.fillStyle='black'
-		context.fillRect(5,5,W-10,H-10)
-		context.fill()
-		context.closePath()
-	}else{
-		context.beginPath()
-		context.fillStyle='black'
-		context.fillRect(0,0,W,H)
-		context.fill()
-		context.closePath()
-	}
+	context.fillStyle='black'
+	context.fillRect(0,0,W,H)
 
-	dep.x+=(depx-dep.x)/7
-	dep.y+=(depy-dep.y)/7
-	fakeSIZE+=(SIZE-fakeSIZE)/7
-	if(mode=='c'){
-		lieux[[x,y]]=sel
-	}else if(mode=='e'){
-		if(find(x,y)){
-			lieux[[x,y]]=undefined
+	for(K in key_dict){
+		if(key_dict[K]){
+			move_by_key(K)
 		}
 	}
+
+	dep.fkx+=Math.round((dep.rlx-dep.fkx)/7)
+	dep.fky+=Math.round((dep.rly-dep.fky)/7)
+	size.fk+=(size.rl-size.fk)/10
+
+	context.beginPath()
+	context.moveTo(dep.fkx-10,dep.fky)
+	context.lineTo(dep.fkx+10,dep.fky)
+	context.stroke()
+	context.closePath()
+	context.beginPath()
+	context.moveTo(dep.fkx,dep.fky-10)
+	context.lineTo(dep.fkx,dep.fky+10)
+	context.stroke()
+	context.closePath()
+
+	
+
 	for(clef in lieux){
 		pos=clef.split(',')
-		i=parseInt(pos[0])+0.5
-		j=parseInt(pos[1])+0.5
-		if(i>-depx/SIZE-1 && j>-depy/SIZE-2 && i<-depx/SIZE+nbsx+1 &&j<-depy/SIZE+nbsy+1 ){
-			context.beginPath()
+		pos[0]=parseInt(pos[0])
+		pos[1]=parseInt(pos[1])
+		if(pos[0]>-dep.rlx/size.rl-1 && pos[1]>-dep.rly/size.rl-1
+			 && pos[0]<(-dep.rlx+W)/size.rl &&pos[1]<(-dep.rly+H)/size.rl)
+		{
+			context.shadowColor = coul(lieux[clef]);
 			context.fillStyle=coul(lieux[clef])
-			context.fillRect(i*SIZE+dep.x,j*SIZE+dep.y,SIZE,SIZE)
-			context.fill()
-			context.closePath()
-		}
-	}
-	if(helpmode){
-		context.fillStyle="black"
-		context.fillRect(0,0,W/2,7*25)
-		context.fillStyle = "white";
-		let decal=25
-		let ls=['Maj -> masquer la bordure','Flèches -> se déplacer','Molette -> zoomer','W/X -> changer de couleur','Echap -> recentrer',"Espace -> cacher cette inutilité"]
-		for(elem in ls ){
-			context.fillText(ls[elem],0,decal);
-			decal+=25
-		}
+			context.fillRect(pos[0]*size.fk+dep.fkx,
+							pos[1]*size.fk+dep.fky,
+							size.fk,size.fk)
 
+		}
 	}
+	
+	if(mode=='e')
+	{
+		context.strokeStyle = "black";
+		if(find(mousex,mousey))
+		{
+			delete lieux[[mousex,mousey]]
+		}
+		
+	}
+	else{
+		context.strokeStyle = coul(coulSel);
+	 	if(mode=='c')
+		{
+			lieux[[mousex,mousey]]=coulSel
+		}
+	}
+
+	context.rect(mousex*size.fk+dep.fkx,mousey*size.fk+dep.fky,size.fk,size.fk);
+	context.stroke();
+	//helper.textContent=coulSel
+	helper.style.color=coul(coulSel)
+	if(helpmode){helper.style.display = "block";}
+	else{helper.style.display = "none";}
+
 	requestAnimationFrame(bLoop)
 }
+
 bLoop()
